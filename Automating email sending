@@ -1,0 +1,85 @@
+import smtplib
+import csv
+from datetime import datetime
+import os
+import pandas as pd
+
+while True:
+    kind = input("choose xlsx or csv or txt: ").lower()
+    if kind == "csv" or kind == "xlsx" or kind == "txt":
+        break
+    else:
+        print("Please enter the correct answer: ")
+
+my_email = input("Enter your email: ")
+my_password = input("Enter your password: ")
+name_company = input("Enter company name: ")
+
+if kind == "txt":
+    customers = []
+    with open("customers.txt", "r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            name = row['name'].strip()
+            email = row['email'].strip()
+            customers.append([name, email])
+    conn = smtplib.SMTP('smtp.gmail.com', 587)
+    conn.ehlo()
+    conn.starttls()
+    conn.login(f'{my_email}', f'{my_password}')
+    for customer in customers:
+        name = customer[0]
+        email = customer[1]
+        subject = f"{name_company}"
+        body_message = f"hello, {name}\nThanks you for subscribe"
+        message = f"Subject: {subject}\n\n{body_message}"
+        try:
+            conn.sendmail(f"{my_email}", email, message)
+            with open("logs.txt", "a", encoding="utf-8") as log:
+                log.write(f"{datetime.now()} - تم الارسال الى \"{email}\"")
+            print(f"OK: {email}")
+        except Exception as e:
+            print(f"FAIL: {email} - خطا: {e}")
+    conn.quit()
+    print("تم الانتهاء من الارسال جميع الايميلات.")
+else:
+    path = input("Please enter the file path and next to each symbol (\\) put another one, for example (D:\\script) will become (D:\\\\script): ")
+    os.chdir(f"{path}")
+
+    if kind == "csv":
+        F = input("file name is: ")
+        df = pd.read_csv(f"{F}.csv")
+    elif kind== "xlsx":
+        F = input("file name is: ")
+        df = pd.read_excel(f"{F}.xlsx")
+    else:
+        print("اختيار غلط")
+        exit()
+
+    customers = []
+
+    for _, row in df.iterrows():
+        name = str(row["name"]).strip()
+        email = str(row["email"]).strip()
+        customers.append([name, email])
+
+    print(customers)
+    conn = smtplib.SMTP('smtp.gmail.com', 587)
+    conn.ehlo()
+    conn.starttls()
+    conn.login(f'{my_email}', f'{my_password}')
+    for customer in customers:
+        name = customer[0]
+        email = customer[1]
+        subject = f"{name_company}"
+        body_message = f"hello, {name}\nThanks you for subscribe"
+        message = f"Subject: {subject}\n\n{body_message}"
+        try:
+            conn.sendmail(f"{my_email}", email, message)
+            with open("logs.txt", "a", encoding="utf-8") as log:
+                log.write(f"{datetime.now()} - تم الارسال الى \"{email}\"")
+            print(f"OK: {email}")
+        except Exception as e:
+            print(f"FAIL: {email} - خطا: {e}")
+    conn.quit()
+    print("تم الانتهاء من الارسال جميع الايميلات.")
